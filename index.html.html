@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspira · Mesa de Calibragem 9Box</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f13;
+    --surface: #16181f;
+    --surface2: #1e2029;
+    --border: #2a2d3a;
+    --text: #e8eaf0;
+    --muted: #7c8099;
+    --accent: #5b6aff;
+    --q-red: #c0392b;
+    --q-red-light: #e74c3c;
+    --q-yellow: #d4a017;
+    --q-yellow-light: #f1c40f;
+    --q-green: #1e7e3e;
+    --q-green-light: #27ae60;
+    --col-abaixo: #e74c3c;
+    --col-dentro: #f39c12;
+    --col-acima: #27ae60;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 36px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.82rem;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #4857e0; }
+  .btn-danger { background: transparent; border: 1px solid #e74c3c44; color: #e74c3c; font-size: 0.75rem; padding: 5px 12px; }
+  .btn-danger:hover { background: #e74c3c22; }
+
+  .app-wrap {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: calc(100vh - 57px);
+  }
+
+  .sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-section { padding: 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .search-box {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+
+  .person-list { flex: 1; overflow-y: auto; padding: 10px; }
+  .person-list::-webkit-scrollbar { width: 4px; }
+  .person-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .person-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    margin-bottom: 3px;
+  }
+  .person-item:hover { background: var(--surface2); }
+  .person-item.active { background: var(--surface2); border-color: var(--accent); }
+
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.75rem;
+    flex-shrink: 0; color: #fff;
+  }
+  .person-info { flex: 1; min-width: 0; }
+  .person-name { font-size: 0.87rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .person-squad { font-size: 0.74rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.3s; }
+  .status-dot.evaluated { background: var(--q-green-light); }
+
+  .main { display: flex; flex-direction: column; overflow-y: auto; }
+
+  .eval-panel { padding: 36px 40px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .eval-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px; }
+  .eval-person-info h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+  .eval-person-info .squad-tag {
+    display: inline-block; margin-top: 7px; padding: 3px 11px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border); font-size: 0.77rem; color: var(--muted);
+  }
+
+  .result-badge { display: none; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .result-badge.visible { display: flex; }
+  .result-badge .badge-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .result-badge .badge-name { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; padding: 6px 18px; border-radius: 8px; }
+
+  .axes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .axis-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
+  .axis-card.selected { border-color: var(--accent); }
+  .axis-title { font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .axis-desc { font-size: 0.83rem; color: var(--text); margin-bottom: 18px; line-height: 1.5; min-height: 42px; }
+
+  .scale-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .scale-btn {
+    padding: 10px 6px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; text-align: center; line-height: 1.3;
+  }
+  .scale-btn.abaixo.selected { background: #e74c3c22; border-color: var(--col-abaixo); color: #ff7070; }
+  .scale-btn.dentro.selected { background: #f39c1222; border-color: #f39c12; color: #f9c558; }
+  .scale-btn.acima.selected  { background: #27ae6022; border-color: var(--col-acima); color: #5dcc80; }
+
+  .eval-actions { display: flex; gap: 12px; align-items: center; }
+  .btn-confirm {
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.88rem;
+    padding: 11px 28px; border-radius: 9px; border: none; cursor: pointer;
+    background: var(--accent); color: #fff; transition: all 0.2s;
+  }
+  .btn-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-confirm:not(:disabled):hover { background: #4857e0; transform: translateY(-1px); }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 40px; text-align: center; gap: 12px; }
+  .empty-icon { font-size: 3rem; opacity: 0.3; margin-bottom: 8px; }
+  .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--muted); }
+  .empty-state p { font-size: 0.85rem; color: var(--muted); opacity: 0.7; max-width: 300px; }
+
+  .matrix-section { padding: 36px 40px; flex: 1; }
+  .matrix-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .matrix-header h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; }
+  .matrix-header span { font-size: 0.8rem; color: var(--muted); margin-left: 12px; }
+
+  .matrix-wrap { display: grid; grid-template-columns: 38px 1fr; grid-template-rows: 1fr 28px; gap: 6px; max-width: 900px; }
+  .y-axis-label {
+    writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+    grid-row: 1; grid-column: 1;
+  }
+  .matrix-grid { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; gap: 4px; }
+  .matrix-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+
+  .matrix-cell {
+    border-radius: 10px; padding: 12px 14px; min-height: 110px;
+    display: flex; flex-direction: column; transition: transform 0.2s;
+  }
+  .cell-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .cell-title { font-family: 'Syne', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1.35; text-transform: uppercase; }
+  .cell-count { font-size: 0.72rem; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.15); flex-shrink: 0; }
+  .cell-people { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
+
+  .person-chip { display: flex; align-items: center; gap: 5px; padding: 3px 9px 3px 5px; border-radius: 20px; background: rgba(0,0,0,0.25); font-size: 0.72rem; font-weight: 500; color: rgba(255,255,255,0.9); cursor: pointer; transition: background 0.15s; }
+  .person-chip:hover { background: rgba(0,0,0,0.4); }
+  .chip-avatar { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; flex-shrink: 0; color: #fff; }
+  .chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+
+  .cell-red    { background: linear-gradient(135deg, #c0392b 0%, #96281b 100%); color: #fff; }
+  .cell-yellow { background: linear-gradient(135deg, #d4a017 0%, #a87c0e 100%); color: #fff; }
+  .cell-green  { background: linear-gradient(135deg, #1e7e3e 0%, #145a2c 100%); color: #fff; }
+
+  .x-axis-labels { grid-row: 2; grid-column: 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  .x-axis-label { text-align: center; font-size: 0.68rem; color: var(--muted); font-weight: 500; padding-top: 4px; }
+
+  .tooltip {
+    position: fixed; background: #2a2d3a; border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; font-size: 0.8rem;
+    pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 999;
+    max-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .tooltip.show { opacity: 1; }
+  .tt-name { font-weight: 600; color: var(--text); }
+  .tt-squad { color: var(--muted); font-size: 0.75rem; margin-top: 3px; }
+  .tt-scores { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+  .tt-score-row { font-size: 0.75rem; color: var(--muted); }
+  .tt-score-row strong { color: var(--text); }
+
+  /* ── HISTORY ── */
+  .history-section { padding: 28px 40px; border-top: 1px solid var(--border); }
+  .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .history-header h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; }
+
+  .history-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .history-table th {
+    text-align: left; padding: 8px 12px; color: var(--muted);
+    font-weight: 500; font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.8px; border-bottom: 1px solid var(--border);
+  }
+  .history-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr:hover td { background: var(--surface2); }
+
+  /* notes columns align to top since they have textareas */
+  .history-table td.notes-col { vertical-align: top; padding-top: 11px; }
+
+  .notes-field {
+    width: 100%;
+    min-width: 160px;
+    min-height: 62px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .notes-field::placeholder { color: var(--muted); opacity: 0.55; }
+  .notes-positivo:focus { border-color: #27ae60; box-shadow: 0 0 0 3px #27ae6018; }
+  .notes-atencao:focus  { border-color: #f39c12; box-shadow: 0 0 0 3px #f39c1218; }
+
+  .score-pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+  .score-abaixo { background: #e74c3c22; color: #ff7070; border: 1px solid #e74c3c44; }
+  .score-dentro { background: #f39c1222; color: #f9c558; border: 1px solid #f39c1244; }
+  .score-acima  { background: #27ae6022; color: #5dcc80; border: 1px solid #27ae6044; }
+  .quadrant-pill { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 380px; transform: translateY(10px); transition: transform 0.2s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 20px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .modal-field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; outline: none; }
+  .modal-field input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  .stats-bar { display: flex; gap: 20px; padding: 14px 40px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .stat-item { display: flex; align-items: center; gap: 8px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); }
+
+  .matrix-legend { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.74rem; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Inspira <span>·</span> 9Box</div>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="openAddModal()">+ Colaborador</button>
+    <button class="btn btn-ghost" onclick="exportPDF()">⬇ Exportar PDF</button>
+    <button class="btn btn-ghost" onclick="clearAll()" style="color:#e74c3c;border-color:#e74c3c33">Limpar tudo</button>
+  </div>
+</header>
+
+<div class="app-wrap">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Colaboradores</div>
+      <input type="text" class="search-box" placeholder="Buscar por nome ou squad..." oninput="filterPeople(this.value)">
+    </div>
+    <div class="person-list" id="personList"></div>
+  </aside>
+
+  <main class="main">
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-value" id="totalCount">0</span><span class="stat-label">total</span></div>
+      <div class="stat-item"><span class="stat-value" id="evaluatedCount" style="color:var(--q-green-light)">0</span><span class="stat-label">avaliados</span></div>
+      <div class="stat-item"><span class="stat-value" id="pendingCount" style="color:var(--q-yellow-light)">0</span><span class="stat-label">pendentes</span></div>
+    </div>
+
+    <div class="eval-panel">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">👥</div>
+        <h3>Selecione um colaborador</h3>
+        <p>Escolha uma pessoa na lista ao lado para iniciar a avaliação 9box.</p>
+      </div>
+
+      <div id="evalForm" style="display:none">
+        <div class="eval-header">
+          <div class="eval-person-info">
+            <h2 id="evalName">—</h2>
+            <span class="squad-tag" id="evalSquad">—</span>
+          </div>
+          <div class="result-badge" id="resultBadge">
+            <span class="badge-label">Quadrante</span>
+            <span class="badge-name" id="resultName">—</span>
+          </div>
+        </div>
+
+        <div class="axes-grid">
+          <div class="axis-card" id="cardPotencial">
+            <div class="axis-title">↑ Eixo Vertical — Potencial</div>
+            <div class="axis-desc">Como eu trabalho: comportamentos que geram velocidade e qualidade (autonomia, IA, comunicação)</div>
+            <div class="scale-btns">
+              <button class="scale-btn abaixo" onclick="selectAxis('potencial','abaixo',this)">⬇ Abaixo<br>do esperado</button>
+              <button class="scale-btn dentro" onclick="selectAxis('potencial','dentro',this)">➡ Dentro<br>do esperado</button>
+              <button class="scale-btn acima" onclick="selectAxis('potencial','acima',this)">⬆ Acima<br>do esperado</button>
+            </div>
+          </div>
+
+          <div class="axis-card" id="cardImpacto">
+            <div class="axis-title">→ Eixo Horizontal — Performance</div>
+            <div class="axis-desc">Impacto do meu trabalho: resultados que geram valor real para o cliente e/ou negócio</div>
+            <div class="scale-btns">
+              <button class="scale-btn abaixo" onclick="selectAxis('impacto','abaixo',this)">⬇ Abaixo<br>do esperado</button>
+              <button class="scale-btn dentro" onclick="selectAxis('impacto','dentro',this)">➡ Dentro<br>do esperado</button>
+              <button class="scale-btn acima" onclick="selectAxis('impacto','acima',this)">⬆ Acima<br>do esperado</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="eval-actions">
+          <button class="btn-confirm" id="confirmBtn" onclick="confirmEval()" disabled>Confirmar avaliação</button>
+          <button class="btn btn-ghost" onclick="clearCurrentEval()">Limpar seleção</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="matrix-section">
+      <div class="matrix-header">
+        <div><h3>Mapa 9Box <span id="matrixSubtitle">— nenhuma avaliação ainda</span></h3></div>
+        <button class="btn btn-ghost" onclick="exportPDF()">⬇ Salvar PDF</button>
+      </div>
+      <div class="matrix-wrap">
+        <div class="y-axis-label">↑ Potencial (Como eu trabalho)</div>
+        <div class="matrix-grid" id="matrixGrid"></div>
+        <div style="grid-row:2;grid-column:1"></div>
+        <div class="x-axis-labels">
+          <div class="x-axis-label">Abaixo do esperado</div>
+          <div class="x-axis-label" style="font-family:'Syne';font-size:0.68rem;font-weight:700;letter-spacing:1px;color:var(--muted)">→ Performance (Impacto)</div>
+          <div class="x-axis-label">Acima do esperado</div>
+        </div>
+      </div>
+      <div class="matrix-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div> Zona de atenção</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#d4a017"></div> Zona de desenvolvimento</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1e7e3e"></div> Zona de alto potencial / desempenho</div>
+      </div>
+    </div>
+
+    <div class="history-section" id="historySection" style="display:none">
+      <div class="history-header">
+        <h3>Histórico da sessão</h3>
+        <button class="btn btn-danger" onclick="clearAll()">Limpar histórico</button>
+      </div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Colaborador</th>
+            <th>Squad</th>
+            <th>Potencial</th>
+            <th>Performance</th>
+            <th>Quadrante</th>
+            <th style="color:#5dcc80">✦ Pontos positivos destacados</th>
+            <th style="color:#f9c558">⚑ Pontos de atenção / desenvolvimento</th>
+            <th>Horário</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Adicionar colaborador</h3>
+    <div class="modal-field">
+      <label>Nome completo</label>
+      <input type="text" id="newName" placeholder="Ex: Ana Silva">
+    </div>
+    <div class="modal-field">
+      <label>Squad / Área</label>
+      <input type="text" id="newSquad" placeholder="Ex: Produto, Engenharia, Vendas...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAddModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="addPerson()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-name" id="ttName"></div>
+  <div class="tt-squad" id="ttSquad"></div>
+  <div class="tt-scores" id="ttScores"></div>
+</div>
+
+<script>
+const QUADRANT_MAP = {
+  acima_acima:   { name: "Talento",                            color: "cell-green",  hex: "#1e7e3e" },
+  acima_dentro:  { name: "Forte Desempenho / Em Crescimento",  color: "cell-green",  hex: "#2ecc71" },
+  acima_abaixo:  { name: "Enigma / Diamante Bruto",            color: "cell-yellow", hex: "#d4a017" },
+  dentro_acima:  { name: "Forte Desempenho",                   color: "cell-green",  hex: "#27ae60" },
+  dentro_dentro: { name: "Mantenedor / Diversificação Limitada", color: "cell-yellow", hex: "#d4a017" },
+  dentro_abaixo: { name: "Questionável",                       color: "cell-red",    hex: "#c0392b" },
+  abaixo_acima:  { name: "Comprometido",                       color: "cell-yellow", hex: "#d4a017" },
+  abaixo_dentro: { name: "Eficaz",                             color: "cell-red",    hex: "#e74c3c" },
+  abaixo_abaixo: { name: "Potencial p/ Realocação / Demissão", color: "cell-red",    hex: "#96281b" },
+};
+
+const MATRIX_LAYOUT = [
+  { cells: ["acima_abaixo",  "acima_dentro",  "acima_acima"]  },
+  { cells: ["dentro_abaixo", "dentro_dentro", "dentro_acima"] },
+  { cells: ["abaixo_abaixo", "abaixo_dentro", "abaixo_acima"] },
+];
+
+let people = [
+  { id:1,  name:"Ana Beatriz Lima",   squad:"Produto"    },
+  { id:2,  name:"Bruno Carvalho",     squad:"Engenharia" },
+  { id:3,  name:"Carla Mendes",       squad:"Vendas"     },
+  { id:4,  name:"Diego Ferreira",     squad:"Produto"    },
+  { id:5,  name:"Erica Santos",       squad:"Design"     },
+  { id:6,  name:"Felipe Rocha",       squad:"Engenharia" },
+  { id:7,  name:"Gabriela Costa",     squad:"Operações"  },
+  { id:8,  name:"Henrique Nunes",     squad:"Dados"      },
+  { id:9,  name:"Isabella Teixeira",  squad:"Marketing"  },
+  { id:10, name:"João Pedro Alves",   squad:"Engenharia" },
+  { id:11, name:"Karen Oliveira",     squad:"Produto"    },
+  { id:12, name:"Lucas Andrade",      squad:"Vendas"     },
+];
+
+let evaluations = {};
+let currentPersonId  = null;
+let currentPotencial = null;
+let currentImpacto   = null;
+let nextId  = 13;
+let history = [];
+
+function init() { renderPersonList(people); renderMatrix(); updateStats(); }
+
+function avatarColor(name) {
+  const c = ['#5b6aff','#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff9a3c','#c77dff','#00bbf9','#f72585','#80b918'];
+  let h = 0; for (let ch of name) h = (h + ch.charCodeAt(0)) % c.length; return c[h];
+}
+function initials(name) { return name.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase(); }
+
+function renderPersonList(list) {
+  const el = document.getElementById('personList');
+  el.innerHTML = '';
+  list.forEach(p => {
+    const ev  = evaluations[p.id];
+    const div = document.createElement('div');
+    div.className = 'person-item' + (currentPersonId===p.id?' active':'');
+    div.onclick   = () => selectPerson(p.id);
+    div.innerHTML = `
+      <div class="avatar" style="background:${avatarColor(p.name)}">${initials(p.name)}</div>
+      <div class="person-info">
+        <div class="person-name">${p.name}</div>
+        <div class="person-squad">${p.squad}</div>
+      </div>
+      <div class="status-dot ${ev?'evaluated':''}"></div>`;
+    el.appendChild(div);
+  });
+}
+
+function filterPeople(q) {
+  const v = q.toLowerCase();
+  renderPersonList(people.filter(p => p.name.toLowerCase().includes(v) || p.squad.toLowerCase().includes(v)));
+}
+
+function selectPerson(id) {
+  currentPersonId = id; currentPotencial = null; currentImpacto = null;
+  const p  = people.find(x=>x.id===id);
+  const ev = evaluations[id];
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('evalForm').style.display   = 'block';
+  document.getElementById('evalName').textContent  = p.name;
+  document.getElementById('evalSquad').textContent = p.squad;
+  document.querySelectorAll('.scale-btn').forEach(b=>b.classList.remove('selected'));
+  if (ev) {
+    currentPotencial = ev.potencial; currentImpacto = ev.impacto;
+    document.querySelectorAll('#cardPotencial .scale-btn').forEach(b=>{ if(b.classList.contains(ev.potencial)) b.classList.add('selected'); });
+    document.querySelectorAll('#cardImpacto .scale-btn').forEach(b=>{  if(b.classList.contains(ev.impacto))   b.classList.add('selected'); });
+    showResultBadge();
+  } else { document.getElementById('resultBadge').classList.remove('visible'); }
+  document.getElementById('cardPotencial').classList.toggle('selected', !!currentPotencial);
+  document.getElementById('cardImpacto').classList.toggle('selected',   !!currentImpacto);
+  updateConfirmBtn();
+  renderPersonList(people);
+}
+
+function selectAxis(axis, value, btn) {
+  const cid = axis==='potencial' ? 'cardPotencial' : 'cardImpacto';
+  document.querySelectorAll(`#${cid} .scale-btn`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (axis==='potencial') { currentPotencial=value; document.getElementById('cardPotencial').classList.add('selected'); }
+  else                    { currentImpacto=value;   document.getElementById('cardImpacto').classList.add('selected'); }
+  if (currentPotencial && currentImpacto) showResultBadge();
+  updateConfirmBtn();
+}
+
+function showResultBadge() {
+  const q = QUADRANT_MAP[`${currentPotencial}_${currentImpacto}`]; if(!q) return;
+  document.getElementById('resultBadge').classList.add('visible');
+  const el = document.getElementById('resultName');
+  el.textContent=q.name; el.style.background=q.hex+'33'; el.style.border=`1px solid ${q.hex}66`; el.style.color='#fff';
+}
+
+function updateConfirmBtn() { document.getElementById('confirmBtn').disabled = !(currentPotencial && currentImpacto); }
+
+function clearCurrentEval() {
+  currentPotencial=null; currentImpacto=null;
+  document.querySelectorAll('.scale-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('cardPotencial').classList.remove('selected');
+  document.getElementById('cardImpacto').classList.remove('selected');
+  document.getElementById('resultBadge').classList.remove('visible');
+  updateConfirmBtn();
+}
+
+function confirmEval() {
+  if (!currentPersonId||!currentPotencial||!currentImpacto) return;
+  const key = `${currentPotencial}_${currentImpacto}`;
+  const p   = people.find(x=>x.id===currentPersonId);
+  evaluations[currentPersonId] = { potencial:currentPotencial, impacto:currentImpacto, quadrantKey:key };
+
+  // preserve notes if re-evaluating
+  const existingIdx = history.findIndex(h=>h.personId===currentPersonId);
+  const notes = existingIdx>=0 ? { positivos:history[existingIdx].positivos, atencao:history[existingIdx].atencao } : { positivos:'', atencao:'' };
+  if (existingIdx>=0) history.splice(existingIdx,1);
+
+  history.unshift({ personId:currentPersonId, name:p.name, squad:p.squad,
+    potencial:currentPotencial, impacto:currentImpacto, quadrantKey:key,
+    time:new Date().toLocaleTimeString('pt-BR'), positivos:notes.positivos, atencao:notes.atencao });
+
+  renderPersonList(people); renderMatrix(); renderHistory(); updateStats();
+  setTimeout(()=>{ const c=document.querySelector(`[data-key="${key}"]`); if(c){c.style.transform='scale(1.03)';setTimeout(()=>c.style.transform='',300);} },50);
+}
+
+function renderMatrix() {
+  const grid = document.getElementById('matrixGrid');
+  grid.innerHTML = '';
+  MATRIX_LAYOUT.forEach(row => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'matrix-row';
+    row.cells.forEach(key => {
+      const q   = QUADRANT_MAP[key];
+      const ppl = Object.entries(evaluations).filter(([,ev])=>ev.quadrantKey===key).map(([id])=>people.find(p=>p.id==id)).filter(Boolean);
+      const cell = document.createElement('div');
+      cell.className='matrix-cell '+q.color; cell.dataset.key=key;
+      cell.innerHTML=`
+        <div class="cell-header">
+          <div class="cell-title">${q.name}</div>
+          ${ppl.length?`<div class="cell-count">${ppl.length}</div>`:''}
+        </div>
+        <div class="cell-people">${ppl.map(p=>`
+          <div class="person-chip" onclick="selectPerson(${p.id})" onmouseenter="showTooltip(event,${p.id})" onmouseleave="hideTooltip()">
+            <div class="chip-avatar" style="background:${avatarColor(p.name)}">${initials(p.name)}</div>
+            <span class="chip-name">${p.name.split(' ')[0]}</span>
+          </div>`).join('')}
+        </div>`;
+      rowDiv.appendChild(cell);
+    });
+    grid.appendChild(rowDiv);
+  });
+  const n = Object.keys(evaluations).length;
+  document.getElementById('matrixSubtitle').textContent = n>0 ? `— ${n} colaborador${n!==1?'es':''} posicionado${n!==1?'s':''}` : '— nenhuma avaliação ainda';
+}
+
+function renderHistory() {
+  const section = document.getElementById('historySection');
+  const tbody   = document.getElementById('historyBody');
+  if (history.length===0) { section.style.display='none'; return; }
+  section.style.display='block';
+  tbody.innerHTML = history.map((h,idx) => {
+    const q = QUADRANT_MAP[h.quadrantKey];
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar" style="background:${avatarColor(h.name)};width:26px;height:26px;font-size:0.65rem">${initials(h.name)}</div>
+          ${h.name}
+        </div>
+      </td>
+      <td style="color:var(--muted)">${h.squad}</td>
+      <td><span class="score-pill score-${h.potencial}">${h.potencial}</span></td>
+      <td><span class="score-pill score-${h.impacto}">${h.impacto}</span></td>
+      <td><span class="quadrant-pill" style="background:${q.hex}33;color:#fff;border:1px solid ${q.hex}55">${q.name}</span></td>
+      <td class="notes-col">
+        <textarea class="notes-field notes-positivo"
+          placeholder="Ex: liderança técnica, entregas consistentes..."
+          oninput="saveNote(${idx},'positivos',this.value)">${h.positivos||''}</textarea>
+      </td>
+      <td class="notes-col">
+        <textarea class="notes-field notes-atencao"
+          placeholder="Ex: comunicação com pares, foco em prioridades..."
+          oninput="saveNote(${idx},'atencao',this.value)">${h.atencao||''}</textarea>
+      </td>
+      <td style="color:var(--muted);font-size:0.78rem;white-space:nowrap">${h.time}</td>
+      <td><button class="btn btn-danger" onclick="removeEval(${h.personId})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function saveNote(idx, field, value) { if (history[idx]) history[idx][field] = value; }
+
+function updateStats() {
+  const t=people.length, e=Object.keys(evaluations).length;
+  document.getElementById('totalCount').textContent=t;
+  document.getElementById('evaluatedCount').textContent=e;
+  document.getElementById('pendingCount').textContent=t-e;
+}
+
+function removeEval(id) {
+  delete evaluations[id];
+  history = history.filter(h=>h.personId!==id);
+  renderPersonList(people); renderMatrix(); renderHistory(); updateStats();
+  if (currentPersonId===id) { clearCurrentEval(); document.getElementById('resultBadge').classList.remove('visible'); }
+}
+
+function clearAll() {
+  if (!confirm('Limpar todas as avaliações desta sessão?')) return;
+  evaluations={}; history=[]; currentPersonId=null; currentPotencial=null; currentImpacto=null;
+  document.getElementById('emptyState').style.display='flex';
+  document.getElementById('evalForm').style.display='none';
+  renderPersonList(people); renderMatrix(); renderHistory(); updateStats();
+}
+
+function showTooltip(e, id) {
+  const p=people.find(x=>x.id===id), ev=evaluations[id]; if(!p||!ev) return;
+  const q=QUADRANT_MAP[ev.quadrantKey];
+  document.getElementById('ttName').textContent=p.name;
+  document.getElementById('ttSquad').textContent=p.squad;
+  document.getElementById('ttScores').innerHTML=`
+    <div class="tt-score-row">Potencial: <strong>${ev.potencial}</strong></div>
+    <div class="tt-score-row">Performance: <strong>${ev.impacto}</strong></div>
+    <div class="tt-score-row" style="margin-top:4px"><span style="color:${q.hex};font-weight:600">${q.name}</span></div>`;
+  const t=document.getElementById('tooltip');
+  t.style.left=(e.clientX+14)+'px'; t.style.top=(e.clientY-10)+'px'; t.classList.add('show');
+}
+function hideTooltip() { document.getElementById('tooltip').classList.remove('show'); }
+
+function openAddModal() { document.getElementById('addModal').classList.add('open'); setTimeout(()=>document.getElementById('newName').focus(),100); }
+function closeAddModal() { document.getElementById('addModal').classList.remove('open'); document.getElementById('newName').value=''; document.getElementById('newSquad').value=''; }
+function addPerson() {
+  const name=document.getElementById('newName').value.trim(), squad=document.getElementById('newSquad').value.trim();
+  if(!name||!squad) return;
+  people.push({id:nextId++,name,squad}); closeAddModal(); renderPersonList(people); updateStats();
+}
+document.getElementById('addModal').addEventListener('click',e=>{ if(e.target===document.getElementById('addModal')) closeAddModal(); });
+
+function exportPDF() {
+  const cc={ 'cell-red':'#c0392b','cell-yellow':'#d4a017','cell-green':'#1e7e3e' };
+  let html=`<html><head><style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+    body{font-family:'DM Sans',sans-serif;background:#fff;color:#111;padding:30px}
+    h1{font-family:'Syne',sans-serif;font-size:22px;margin-bottom:4px}
+    .sub{font-size:12px;color:#666;margin-bottom:24px}
+    .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    .cell{border-radius:8px;padding:10px 12px;min-height:90px}
+    .ct{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;color:#fff;margin-bottom:6px}
+    .chip{display:inline-block;background:rgba(0,0,0,0.2);color:#fff;font-size:9px;padding:2px 8px;border-radius:10px;margin:2px 2px 0 0}
+    .lbl{text-align:center;font-size:10px;color:#888;padding-top:4px}
+    .ay{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:700;text-transform:uppercase;color:#888;letter-spacing:1px}
+    .wrap{display:grid;grid-template-columns:22px 1fr;gap:4px}
+    .xl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    table{width:100%;border-collapse:collapse;font-size:11px;margin-top:28px}
+    th{text-align:left;padding:6px 10px;background:#f5f5f5;color:#555;font-size:10px;text-transform:uppercase}
+    td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:top}
+    .pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .np{color:#1e7e3e;font-size:10px} .na{color:#a87c0e;font-size:10px}
+  </style></head><body>
+  <h1>Mesa de Calibragem · 9Box Inspira</h1>
+  <div class="sub">Gerado em ${new Date().toLocaleString('pt-BR')} · ${Object.keys(evaluations).length} colaboradores avaliados</div>
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:center"><div class="ay">↑ Potencial</div></div>
+    <div><div class="grid">`;
+
+  MATRIX_LAYOUT.forEach(row=>row.cells.forEach(key=>{
+    const q=QUADRANT_MAP[key];
+    const ppl=Object.entries(evaluations).filter(([,ev])=>ev.quadrantKey===key).map(([id])=>people.find(p=>p.id==id)).filter(Boolean);
+    html+=`<div class="cell" style="background:${cc[q.color]}"><div class="ct">${q.name}</div>${ppl.map(p=>`<span class="chip">${p.name.split(' ').slice(0,2).join(' ')}</span>`).join('')}</div>`;
+  }));
+
+  html+=`</div><div class="xl" style="margin-top:6px">
+    <div class="lbl">Abaixo do esperado</div>
+    <div class="lbl" style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">→ Performance</div>
+    <div class="lbl">Acima do esperado</div>
+  </div></div></div>`;
+
+  if (history.length>0) {
+    html+=`<table><thead><tr><th>Colaborador</th><th>Squad</th><th>Potencial</th><th>Performance</th><th>Quadrante</th><th>✦ Pontos positivos</th><th>⚑ Pontos de atenção</th><th>Hora</th></tr></thead><tbody>`;
+    history.forEach(h=>{
+      const q=QUADRANT_MAP[h.quadrantKey], bg=cc[q.color]||'#333';
+      html+=`<tr>
+        <td><strong>${h.name}</strong></td><td>${h.squad}</td>
+        <td>${h.potencial}</td><td>${h.impacto}</td>
+        <td><span class="pill" style="background:${bg};color:#fff">${q.name}</span></td>
+        <td class="np">${(h.positivos||'').replace(/\n/g,'<br>')||'—'}</td>
+        <td class="na">${(h.atencao||'').replace(/\n/g,'<br>')||'—'}</td>
+        <td>${h.time}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+  html+=`</body></html>`;
+  const w=window.open('','_blank','width=1000,height=750');
+  w.document.write(html); w.document.close(); w.onload=()=>w.print();
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeAddModal(); });
+init();
+</script>
+</body>
+</html>
