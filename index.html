@@ -528,30 +528,91 @@ function renderHistory(){
   var tbody=document.getElementById("historyBody");
   if(history.length===0){section.style.display="none";return;}
   section.style.display="block";
-  tbody.innerHTML=history.map(function(h,idx){
+  tbody.innerHTML="";
+  history.forEach(function(h,idx){
     var q=QUADRANT_MAP[h.quadrantKey];
-    function ib(axis,val){
-      var sel=h[axis]===val?" sel":"";
-      return "<button class=\"inline-btn "+val+" inline-"+axis+sel+"\" onclick=\"updateHistoryScore("+idx+",'"+axis+"','"+val+"',this)\">"+val+"</button>";
-    }
-    return '<tr>'
-      +'<td><div style="display:flex;align-items:center;gap:7px">'
-      +'<div class="avatar" style="background:'+avatarColor(h.name)+';width:26px;height:26px;font-size:.6rem">'+initials(h.name)+'</div>'
-      +'<div><div style="font-weight:600;font-size:.79rem;color:#032F5B">'+h.name+'</div><div style="font-size:.65rem;color:#656C74;font-weight:300">'+h.cargo+'</div></div>'
-      +'</div></td>'
-      +'<td style="color:#656C74;font-size:.71rem;font-weight:300;max-width:160px">'+h.squad+'</td>'
-      +'<td><div class="inline-score">'+ib("potencial","abaixo")+ib("potencial","dentro")+ib("potencial","acima")+'</div></td>'
-      +'<td><div class="inline-score">'+ib("impacto","abaixo")+ib("impacto","dentro")+ib("impacto","acima")+'</div></td>'
-      +'<td><span class="quadrant-pill" style="background:'+q.hex+'66;color:#1a1a2e;border:1px solid '+q.hex+'99">'+q.num+'</span></td>'
-      +'<td class="notes-col"><textarea class="notes-field notes-positivo" placeholder="Ex: liderança técnica, entregas consistentes..." oninput="saveNote('+idx+','positivos',this.value)">'+( h.positivos||"")+'</textarea></td>'
-      +'<td class="notes-col"><textarea class="notes-field notes-atencao" placeholder="Ex: comunicação, foco em prioridades..." oninput="saveNote('+idx+','atencao',this.value)">'+(h.atencao||"")+'</textarea></td>'
-      +'<td style="color:#8E9399;font-size:.71rem;white-space:nowrap">'+h.time+'</td>'
-      +'<td><button class="btn btn-danger" onclick="removeEval('+h.personId+')">&#10005;</button></td>'
-      +'</tr>';
-  }).join("");
+    var tr=document.createElement("tr");
+    
+    // Col 1: name
+    var td1=document.createElement("td");
+    td1.innerHTML='<div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="background:'+avatarColor(h.name)+';width:26px;height:26px;font-size:.6rem">'+initials(h.name)+'</div><div><div style="font-weight:600;font-size:.79rem;color:#032F5B">'+h.name+'</div><div style="font-size:.65rem;color:#656C74;font-weight:300">'+h.cargo+'</div></div></div>';
+    tr.appendChild(td1);
+    
+    // Col 2: squad
+    var td2=document.createElement("td");
+    td2.style.cssText="color:#656C74;font-size:.71rem;font-weight:300;max-width:160px";
+    td2.textContent=h.squad;
+    tr.appendChild(td2);
+    
+    // Col 3: potencial buttons
+    var td3=document.createElement("td");
+    var div3=document.createElement("div");div3.className="inline-score";
+    ["abaixo","dentro","acima"].forEach(function(val){
+      var btn=document.createElement("button");
+      btn.className="inline-btn "+val+" inline-potencial"+(h.potencial===val?" sel":"");
+      btn.textContent=val;
+      btn.addEventListener("click",function(){updateHistoryScore(idx,"potencial",val,btn);});
+      div3.appendChild(btn);
+    });
+    td3.appendChild(div3);tr.appendChild(td3);
+    
+    // Col 4: impacto buttons
+    var td4=document.createElement("td");
+    var div4=document.createElement("div");div4.className="inline-score";
+    ["abaixo","dentro","acima"].forEach(function(val){
+      var btn=document.createElement("button");
+      btn.className="inline-btn "+val+" inline-impacto"+(h.impacto===val?" sel":"");
+      btn.textContent=val;
+      btn.addEventListener("click",function(){updateHistoryScore(idx,"impacto",val,btn);});
+      div4.appendChild(btn);
+    });
+    td4.appendChild(div4);tr.appendChild(td4);
+    
+    // Col 5: quadrant pill
+    var td5=document.createElement("td");
+    var pill=document.createElement("span");
+    pill.className="quadrant-pill";
+    pill.style.cssText="background:"+q.hex+"66;color:#1a1a2e;border:1px solid "+q.hex+"99";
+    pill.textContent=q.num;
+    td5.appendChild(pill);tr.appendChild(td5);
+    
+    // Col 6: pontos positivos
+    var td6=document.createElement("td");td6.className="notes-col";
+    var ta1=document.createElement("textarea");
+    ta1.className="notes-field notes-positivo";
+    ta1.placeholder="Ex: liderança técnica, entregas consistentes...";
+    ta1.value=h.positivos||"";
+    ta1.addEventListener("input",function(){saveNote(idx,"positivos",ta1.value);});
+    td6.appendChild(ta1);tr.appendChild(td6);
+    
+    // Col 7: pontos de atencao
+    var td7=document.createElement("td");td7.className="notes-col";
+    var ta2=document.createElement("textarea");
+    ta2.className="notes-field notes-atencao";
+    ta2.placeholder="Ex: comunicação, foco em prioridades...";
+    ta2.value=h.atencao||"";
+    ta2.addEventListener("input",function(){saveNote(idx,"atencao",ta2.value);});
+    td7.appendChild(ta2);tr.appendChild(td7);
+    
+    // Col 8: time
+    var td8=document.createElement("td");
+    td8.style.cssText="color:#8E9399;font-size:.71rem;white-space:nowrap";
+    td8.textContent=h.time;
+    tr.appendChild(td8);
+    
+    // Col 9: delete
+    var td9=document.createElement("td");
+    var delBtn=document.createElement("button");
+    delBtn.className="btn btn-danger";
+    delBtn.textContent="✕";
+    delBtn.addEventListener("click",function(){removeEval(h.personId);});
+    td9.appendChild(delBtn);tr.appendChild(td9);
+    
+    tbody.appendChild(tr);
+  });
 }
 
-function saveNote(idx,field,value){
+function saveNotefunction saveNote(idx,field,value){
   if(history[idx]){
     history[idx][field]=value;
     var pid=history[idx].personId;var ev=evaluations[pid];
