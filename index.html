@@ -5,8 +5,136 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inspira · 9Box v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js">
+function exportJSON(){
+  const data={
+    exportedAt: new Date().toISOString(),
+    evaluations: history.map(h=>({
+      personId: h.personId,
+      name: h.name,
+      cargo: h.cargo,
+      squad: h.squad,
+      gestor: h.gestor,
+      potencial: h.potencial,
+      impacto: h.impacto,
+      quadrantKey: h.quadrantKey,
+      quadrantNum: QUADRANT_MAP[h.quadrantKey]?.num || "",
+      quadrantName: QUADRANT_MAP[h.quadrantKey]?.name || "",
+      positivos: h.positivos || "",
+      atencao: h.atencao || "",
+      time: h.time
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "inspira-9box-" + new Date().toLocaleDateString("pt-BR").replace(/\//g,"-") + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.evaluations || !Array.isArray(data.evaluations)){
+        alert("Arquivo inválido. O JSON não contém avaliações.");
+        return;
+      }
+      if(!confirm(\`Importar \${data.evaluations.length} avaliações? Os dados atuais serão mantidos e os novos serão adicionados/atualizados.\`)) return;
+      data.evaluations.forEach(h => {
+        if(!h.personId || !h.potencial || !h.impacto) return;
+        evaluations[h.personId] = {potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey};
+        const ei = history.findIndex(x => x.personId === h.personId);
+        const entry = {
+          personId:h.personId, name:h.name, cargo:h.cargo, squad:h.squad, gestor:h.gestor,
+          potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey,
+          time:h.time||"--:--", positivos:h.positivos||"", atencao:h.atencao||""
+        };
+        if(ei >= 0) history[ei] = entry;
+        else history.unshift(entry);
+        db.collection("evaluations").doc(String(h.personId)).set(entry).catch(e=>console.error(e));
+      });
+      renderPersonList(people); renderMatrix(); renderHistory(); updateStats();
+      alert(\`\${data.evaluations.length} avaliações importadas com sucesso!\`);
+    } catch(err) {
+      alert("Erro ao ler o arquivo JSON. Verifique se o arquivo é válido.");
+      console.error(err);
+    }
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js">
+function exportJSON(){
+  const data={
+    exportedAt: new Date().toISOString(),
+    evaluations: history.map(h=>({
+      personId: h.personId,
+      name: h.name,
+      cargo: h.cargo,
+      squad: h.squad,
+      gestor: h.gestor,
+      potencial: h.potencial,
+      impacto: h.impacto,
+      quadrantKey: h.quadrantKey,
+      quadrantNum: QUADRANT_MAP[h.quadrantKey]?.num || "",
+      quadrantName: QUADRANT_MAP[h.quadrantKey]?.name || "",
+      positivos: h.positivos || "",
+      atencao: h.atencao || "",
+      time: h.time
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "inspira-9box-" + new Date().toLocaleDateString("pt-BR").replace(/\//g,"-") + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.evaluations || !Array.isArray(data.evaluations)){
+        alert("Arquivo inválido. O JSON não contém avaliações.");
+        return;
+      }
+      if(!confirm(\`Importar \${data.evaluations.length} avaliações? Os dados atuais serão mantidos e os novos serão adicionados/atualizados.\`)) return;
+      data.evaluations.forEach(h => {
+        if(!h.personId || !h.potencial || !h.impacto) return;
+        evaluations[h.personId] = {potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey};
+        const ei = history.findIndex(x => x.personId === h.personId);
+        const entry = {
+          personId:h.personId, name:h.name, cargo:h.cargo, squad:h.squad, gestor:h.gestor,
+          potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey,
+          time:h.time||"--:--", positivos:h.positivos||"", atencao:h.atencao||""
+        };
+        if(ei >= 0) history[ei] = entry;
+        else history.unshift(entry);
+        db.collection("evaluations").doc(String(h.personId)).set(entry).catch(e=>console.error(e));
+      });
+      renderPersonList(people); renderMatrix(); renderHistory(); updateStats();
+      alert(\`\${data.evaluations.length} avaliações importadas com sucesso!\`);
+    } catch(err) {
+      alert("Erro ao ler o arquivo JSON. Verifique se o arquivo é válido.");
+      console.error(err);
+    }
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
+</script>
 <script>
   firebase.initializeApp({
     apiKey:"AIzaSyBagy-p3jY3m56ykaFWH6tWpFkYKn2jTXY",
@@ -17,6 +145,70 @@
     appId:"1:1022033896244:web:486a1acbdc9c11b2687b61"
   });
   const db = firebase.firestore();
+
+function exportJSON(){
+  const data={
+    exportedAt: new Date().toISOString(),
+    evaluations: history.map(h=>({
+      personId: h.personId,
+      name: h.name,
+      cargo: h.cargo,
+      squad: h.squad,
+      gestor: h.gestor,
+      potencial: h.potencial,
+      impacto: h.impacto,
+      quadrantKey: h.quadrantKey,
+      quadrantNum: QUADRANT_MAP[h.quadrantKey]?.num || "",
+      quadrantName: QUADRANT_MAP[h.quadrantKey]?.name || "",
+      positivos: h.positivos || "",
+      atencao: h.atencao || "",
+      time: h.time
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "inspira-9box-" + new Date().toLocaleDateString("pt-BR").replace(/\//g,"-") + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.evaluations || !Array.isArray(data.evaluations)){
+        alert("Arquivo inválido. O JSON não contém avaliações.");
+        return;
+      }
+      if(!confirm(\`Importar \${data.evaluations.length} avaliações? Os dados atuais serão mantidos e os novos serão adicionados/atualizados.\`)) return;
+      data.evaluations.forEach(h => {
+        if(!h.personId || !h.potencial || !h.impacto) return;
+        evaluations[h.personId] = {potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey};
+        const ei = history.findIndex(x => x.personId === h.personId);
+        const entry = {
+          personId:h.personId, name:h.name, cargo:h.cargo, squad:h.squad, gestor:h.gestor,
+          potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey,
+          time:h.time||"--:--", positivos:h.positivos||"", atencao:h.atencao||""
+        };
+        if(ei >= 0) history[ei] = entry;
+        else history.unshift(entry);
+        db.collection("evaluations").doc(String(h.personId)).set(entry).catch(e=>console.error(e));
+      });
+      renderPersonList(people); renderMatrix(); renderHistory(); updateStats();
+      alert(\`\${data.evaluations.length} avaliações importadas com sucesso!\`);
+    } catch(err) {
+      alert("Erro ao ler o arquivo JSON. Verifique se o arquivo é válido.");
+      console.error(err);
+    }
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
 </script>
 <style>
 :root{
@@ -196,6 +388,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 3
   <div class="header-right">
     <button class="btn btn-ghost" onclick="openAddModal()">+ Colaborador</button>
     <button class="btn btn-ghost" onclick="exportPDF()">&#8595; PDF</button>
+    <button class="btn btn-ghost" onclick="exportJSON()" style="color:#0B4987;border-color:#B8DAFF">&#8595; JSON</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('importInput').click()" style="color:#0B4987;border-color:#B8DAFF">&#8593; Importar JSON</button>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
     <button class="btn btn-ghost" style="color:#e05252;border-color:#e0525230" onclick="clearAll()">Limpar sessão</button>
   </div>
 </header>
@@ -746,6 +941,70 @@ db.collection("evaluations").onSnapshot(snapshot=>{
   });
   renderPersonList(people);renderMatrix();renderHistory();updateStats();
 });
+
+function exportJSON(){
+  const data={
+    exportedAt: new Date().toISOString(),
+    evaluations: history.map(h=>({
+      personId: h.personId,
+      name: h.name,
+      cargo: h.cargo,
+      squad: h.squad,
+      gestor: h.gestor,
+      potencial: h.potencial,
+      impacto: h.impacto,
+      quadrantKey: h.quadrantKey,
+      quadrantNum: QUADRANT_MAP[h.quadrantKey]?.num || "",
+      quadrantName: QUADRANT_MAP[h.quadrantKey]?.name || "",
+      positivos: h.positivos || "",
+      atencao: h.atencao || "",
+      time: h.time
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "inspira-9box-" + new Date().toLocaleDateString("pt-BR").replace(/\//g,"-") + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.evaluations || !Array.isArray(data.evaluations)){
+        alert("Arquivo inválido. O JSON não contém avaliações.");
+        return;
+      }
+      if(!confirm(\`Importar \${data.evaluations.length} avaliações? Os dados atuais serão mantidos e os novos serão adicionados/atualizados.\`)) return;
+      data.evaluations.forEach(h => {
+        if(!h.personId || !h.potencial || !h.impacto) return;
+        evaluations[h.personId] = {potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey};
+        const ei = history.findIndex(x => x.personId === h.personId);
+        const entry = {
+          personId:h.personId, name:h.name, cargo:h.cargo, squad:h.squad, gestor:h.gestor,
+          potencial:h.potencial, impacto:h.impacto, quadrantKey:h.quadrantKey,
+          time:h.time||"--:--", positivos:h.positivos||"", atencao:h.atencao||""
+        };
+        if(ei >= 0) history[ei] = entry;
+        else history.unshift(entry);
+        db.collection("evaluations").doc(String(h.personId)).set(entry).catch(e=>console.error(e));
+      });
+      renderPersonList(people); renderMatrix(); renderHistory(); updateStats();
+      alert(\`\${data.evaluations.length} avaliações importadas com sucesso!\`);
+    } catch(err) {
+      alert("Erro ao ler o arquivo JSON. Verifique se o arquivo é válido.");
+      console.error(err);
+    }
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
 </script>
 </body>
 </html>
