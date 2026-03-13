@@ -612,7 +612,7 @@ function renderHistory(){
   });
 }
 
-function saveNotefunction saveNote(idx,field,value){
+function saveNote(idx,field,value){
   if(history[idx]){
     history[idx][field]=value;
     var pid=history[idx].personId;var ev=evaluations[pid];
