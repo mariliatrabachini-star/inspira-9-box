@@ -669,10 +669,8 @@ function exportPDF(){
         <td>${h.potencial}</td>
         <td>${h.impacto}</td>
         <td><span class="pill" style="background-color:${bg} !important;color:#1a1a2e;-webkit-print-color-adjust:exact">${q.num}</span></td>
-        <td class="pos">${(h.positivos||"").replace(/
-/g,"<br>")||"—"}</td>
-        <td class="atc">${(h.atencao||"").replace(/
-/g,"<br>")||"—"}</td>
+        <td class="pos">${(h.positivos||"").split("\n").join("<br>")||"—"}</td>
+        <td class="atc">${(h.atencao||"").split("\n").join("<br>")||"—"}</td>
       </tr>`;
     });
     out+=`</tbody></table>`;
