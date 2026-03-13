@@ -531,7 +531,8 @@ function renderHistory(){
   tbody.innerHTML=history.map(function(h,idx){
     var q=QUADRANT_MAP[h.quadrantKey];
     function ib(axis,val){
-      return '<button class="inline-btn '+val+' inline-'+axis+(h[axis]===val?' sel':'')+'" onclick="updateHistoryScore('+idx+',\''+axis+'\',\''+val+'\',this)">'+val+'</button>';
+      var sel=h[axis]===val?" sel":"";
+      return "<button class=\"inline-btn "+val+" inline-"+axis+sel+"\" onclick=\"updateHistoryScore("+idx+",'"+axis+"','"+val+"',this)\">"+val+"</button>";
     }
     return '<tr>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'
