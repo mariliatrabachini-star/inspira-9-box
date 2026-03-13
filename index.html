@@ -442,7 +442,7 @@ function showResultBadge(){
   const q=QUADRANT_MAP[currentPotencial+"_"+currentImpacto];if(!q)return;
   document.getElementById("resultBadge").classList.add("visible");
   const el=document.getElementById("resultName");
-  el.textContent=q.num+" "+q.name;el.style.background=q.hex+"44";el.style.border="1px solid "+q.hex+"88";el.style.color="#1a1a2e";
+  el.textContent=q.num;el.style.background=q.hex+"44";el.style.border="1px solid "+q.hex+"88";el.style.color="#1a1a2e";
 }
 function updateConfirmBtn(){document.getElementById("confirmBtn").disabled=!(currentPotencial&&currentImpacto);}
 function clearCurrentEval(){
@@ -478,7 +478,7 @@ function updateHistoryScore(idx,axis,value,btn){
     const key=h.potencial+"_"+h.impacto;h.quadrantKey=key;
     evaluations[h.personId]={potencial:h.potencial,impacto:h.impacto,quadrantKey:key};
     const pill=row.querySelector(".quadrant-pill"),q=QUADRANT_MAP[key];
-    if(pill&&q){pill.textContent=q.num+" "+q.name;pill.style.background=q.hex+"44";pill.style.color="#1a1a2e";}
+    if(pill&&q){pill.textContent=q.num;pill.style.background=q.hex+"44";pill.style.color="#1a1a2e";}
     db.collection("evaluations").doc(String(h.personId)).set({...evaluations[h.personId],positivos:h.positivos,atencao:h.atencao,name:h.name,squad:h.squad,cargo:h.cargo,gestor:h.gestor,time:h.time}).catch(e=>console.error(e));
     renderMatrix();
     if(currentPersonId===h.personId){currentPotencial=h.potencial;currentImpacto=h.impacto;showResultBadge();}
@@ -499,7 +499,7 @@ function renderHistory(){
       <td style="color:var(--muted);font-size:.72rem;font-weight:300;max-width:175px">${h.squad}</td>
       <td><div class="inline-score">${ib("potencial","abaixo")}${ib("potencial","dentro")}${ib("potencial","acima")}</div></td>
       <td><div class="inline-score">${ib("impacto","abaixo")}${ib("impacto","dentro")}${ib("impacto","acima")}</div></td>
-      <td><span class="quadrant-pill" style="background:${q.hex}44;color:#1a1a2e;border:1px solid ${q.hex}88">${q.num} ${q.name}</span></td>
+      <td><span class="quadrant-pill" style="background:${q.hex}44;color:#1a1a2e;border:1px solid ${q.hex}88">${q.num}</span></td>
       <td class="notes-col"><textarea class="notes-field notes-positivo" placeholder="Ex: liderança técnica, entregas consistentes..." oninput="saveNote(${idx},'positivos',this.value)">${h.positivos||""}</textarea></td>
       <td class="notes-col"><textarea class="notes-field notes-atencao" placeholder="Ex: comunicação, foco em prioridades..." oninput="saveNote(${idx},'atencao',this.value)">${h.atencao||""}</textarea></td>
       <td style="color:var(--muted);font-size:.72rem;white-space:nowrap">${h.time}</td>
@@ -612,50 +612,78 @@ function showTooltip(e,id){
   document.getElementById("ttGestor").textContent="Gestor(a): "+p.gestor;
   document.getElementById("ttScores").innerHTML=`<div class="tt-score-row">Como eu trabalho: <strong>${ev.potencial}</strong></div>
     <div class="tt-score-row">Impacto: <strong>${ev.impacto}</strong></div>
-    <div class="tt-score-row" style="margin-top:4px"><span style="color:#1a1a2e;font-weight:600;background:${q.hex}44;padding:2px 8px;border-radius:5px">${q.num} ${q.name}</span></div>`;
+    <div class="tt-score-row" style="margin-top:4px"><span style="color:#1a1a2e;font-weight:600;background:${q.hex}44;padding:2px 8px;border-radius:5px">${q.num}</span></div>`;
   const t=document.getElementById("tooltip");
   t.style.left=(e.clientX+14)+"px";t.style.top=(e.clientY-10)+"px";t.classList.add("show");
 }
 function hideTooltip(){document.getElementById("tooltip").classList.remove("show");}
 function exportPDF(){
-  let html=`<html><head><style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Poppins',sans-serif;background:#fff;color:#070C21;padding:28px;font-size:11px}
-    .hdr{display:flex;align-items:center;gap:10px;margin-bottom:4px}h1{font-size:17px;font-weight:700;margin:0}
-    .sub{font-size:9px;color:#6a7aaa;margin-bottom:18px;margin-top:3px}
-    .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
-    .cell{border-radius:7px;padding:9px 10px;min-height:78px}
-    .ct{font-size:9px;font-weight:700;margin-bottom:4px}
-    .chip{display:inline-block;padding:2px 7px;border-radius:10px;font-size:7.5px;margin:1px;font-weight:500;background:rgba(0,0,0,0.1);color:#1a1a2e}
-    table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:22px}
-    th{padding:5px 8px;background:#f0f4ff;color:#2c3ba1;font-size:7.5px;text-transform:uppercase;text-align:left;font-weight:600}
-    td{padding:5px 8px;border-bottom:1px solid #edf0fb;vertical-align:top}
-    .pill{display:inline-block;padding:2px 7px;border-radius:5px;font-size:7.5px;font-weight:600;color:#1a1a2e}
+  const bgMap={"cell-green":"#cff6c8","cell-yellow":"#fffec4","cell-red":"#ff9e8e"};
+  const fgMap={"cell-green":"#1a5c14","cell-yellow":"#6b6200","cell-red":"#7a1a0a"};
+  let out=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;background:#fff;color:#070C21;padding:28px;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    h1{font-size:17px;font-weight:700;margin-bottom:3px}
+    .sub{font-size:9px;color:#6a7aaa;margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:22px}
+    .cell{border-radius:7px;padding:10px 11px;min-height:80px}
+    .ct{font-size:10px;font-weight:700;margin-bottom:6px}
+    .chip{display:inline-block;padding:2px 7px;border-radius:10px;font-size:7.5px;margin:1px 1px 2px;font-weight:600;background:rgba(0,0,0,0.13);color:#1a1a2e}
+    table{width:100%;border-collapse:collapse;font-size:8.5px}
+    th{padding:6px 8px;background:#e8eeff;color:#2c3ba1;font-size:7.5px;text-transform:uppercase;text-align:left;font-weight:700;border-bottom:2px solid #c0ccf0}
+    td{padding:6px 8px;border-bottom:1px solid #edf0fb;vertical-align:top}
+    tr:nth-child(even) td{background:#f8f9ff}
+    .pill{display:inline-block;padding:3px 9px;border-radius:5px;font-size:8px;font-weight:700}
+    .pos{color:#0d5c50;font-size:8px}
+    .atc{color:#7a5a06;font-size:8px}
   </style></head><body>
-  <div class="hdr"><h1>inspira · Mesa de Calibragem 9Box</h1></div>
+  <h1>inspira · Mesa de Calibragem 9Box</h1>
   <div class="sub">Gerado em ${new Date().toLocaleString("pt-BR")} · ${Object.keys(evaluations).length} colaboradores avaliados</div>
   <div class="grid">`;
-  const bg={"cell-green":"#cff6c8","cell-yellow":"#fffec4","cell-red":"#ff9e8e"};
+
   MATRIX_LAYOUT.forEach(row=>row.cells.forEach(key=>{
     const q=QUADRANT_MAP[key];
+    const bg=bgMap[q.color],fg=fgMap[q.color];
     const ppl=Object.entries(evaluations).filter(([,ev])=>ev.quadrantKey===key).map(([id])=>people.find(p=>p.id==id)).filter(Boolean);
-    html+=`<div class="cell" style="background:${bg[q.color]}"><div class="ct">${q.num} ${q.name}</div>${ppl.map(p=>`<span class="chip">${p.name.split(" ").slice(0,2).join(" ")}</span>`).join("")}</div>`;
+    out+=`<div class="cell" style="background-color:${bg} !important;-webkit-print-color-adjust:exact">
+      <div class="ct" style="color:${fg}">${q.num}</div>
+      ${ppl.map(p=>`<span class="chip">${p.name.split(" ").slice(0,2).join(" ")}</span>`).join("")}
+    </div>`;
   }));
-  html+=`</div>`;
+
+  out+=`</div>`;
   if(history.length>0){
-    html+=`<table><thead><tr><th>Colaborador</th><th>Cargo</th><th>Squad</th><th>Como eu trabalho</th><th>Impacto</th><th>Quadrante</th><th>Pontos positivos</th><th>Pontos de atenção</th></tr></thead><tbody>`;
+    out+=`<table><thead><tr>
+      <th>Colaborador</th><th>Cargo</th><th>Squad</th>
+      <th>Como eu trabalho</th><th>Impacto</th><th>Quadrante</th>
+      <th>Pontos positivos</th><th>Pontos de atenção</th>
+    </tr></thead><tbody>`;
     history.forEach(h=>{
       const q=QUADRANT_MAP[h.quadrantKey];
-      html+=`<tr><td><strong>${h.name}</strong></td><td>${h.cargo}</td><td>${h.squad}</td><td>${h.potencial}</td><td>${h.impacto}</td>
-        <td><span class="pill" style="background:${q.hex}44;border:1px solid ${q.hex}88">${q.num} ${q.name}</span></td>
-        <td style="color:#0d5c50">${(h.positivos||"").replace(/\n/g,"<br>")||"—"}</td>
-        <td style="color:#7a5a06">${(h.atencao||"").replace(/\n/g,"<br>")||"—"}</td></tr>`;
+      const bg=bgMap[q.color];
+      out+=`<tr>
+        <td><strong>${h.name}</strong></td>
+        <td>${h.cargo}</td>
+        <td>${h.squad}</td>
+        <td>${h.potencial}</td>
+        <td>${h.impacto}</td>
+        <td><span class="pill" style="background-color:${bg} !important;color:#1a1a2e;-webkit-print-color-adjust:exact">${q.num}</span></td>
+        <td class="pos">${(h.positivos||"").replace(/
+/g,"<br>")||"—"}</td>
+        <td class="atc">${(h.atencao||"").replace(/
+/g,"<br>")||"—"}</td>
+      </tr>`;
     });
-    html+=`</tbody></table>`;
+    out+=`</tbody></table>`;
   }
-  html+=`</body></html>`;
-  const w=window.open("","_blank","width=1100,height=750");
-  w.document.write(html);w.document.close();w.onload=()=>w.print();
+  out+=`</body></html>`;
+  const w=window.open("","_blank","width=1200,height=800");
+  w.document.write(out);
+  w.document.close();
+  w.onload=()=>{
+    setTimeout(()=>w.print(),400);
+  };
 }
 document.getElementById("addModal").addEventListener("click",e=>{if(e.target===document.getElementById("addModal"))closeAddModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAddModal();});
