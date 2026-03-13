@@ -687,23 +687,29 @@ function exportPDF(){
 }
 document.getElementById("addModal").addEventListener("click",e=>{if(e.target===document.getElementById("addModal"))closeAddModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAddModal();});
-// Load custom people from Firebase, then start listener
+// Init immediately so the page renders with the default 59 people
+init();
+
+// Then apply any Firebase overrides (edited names, new people)
 db.collection("people").get().then(snap=>{
+  let changed=false;
   snap.forEach(doc=>{
     const d=doc.data();
-    // Only add if not already in the default list
-    if(!people.find(p=>p.id===d.id)){
-      people.push(d);
-      if(d.id>=nextId) nextId=d.id+1;
+    if(!d.id||!d.name)return;
+    const existing=people.find(p=>p.id===d.id);
+    if(existing){
+      existing.name=d.name;existing.squad=d.squad;existing.cargo=d.cargo;existing.gestor=d.gestor;
+      changed=true;
     } else {
-      // Update existing person with Firebase data (catches edits)
-      const p=people.find(x=>x.id===d.id);
-      p.name=d.name;p.squad=d.squad;p.cargo=d.cargo;p.gestor=d.gestor;
+      people.push(d);
+      if(d.id>=nextId)nextId=d.id+1;
+      changed=true;
     }
   });
-  init();
-}).catch(e=>{init();});
+  if(changed){renderPersonList(people);updateStats();}
+}).catch(e=>console.error("people load error",e));
 
+// Real-time evaluations listener
 db.collection("evaluations").onSnapshot(snapshot=>{
   snapshot.docChanges().forEach(change=>{
     const data=change.doc.data();
