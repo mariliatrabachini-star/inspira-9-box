@@ -198,6 +198,93 @@
   .modal-field input:focus { border-color: var(--cornflower); }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 </style>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot, deleteDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBagy-p3jY3m56ykaFWH6tWpFkYKn2jTXY",
+      authDomain: "inspira-9box.firebaseapp.com",
+      projectId: "inspira-9box",
+      storageBucket: "inspira-9box.firebasestorage.app",
+      messagingSenderId: "1022033896244",
+      appId: "1:1022033896244:web:486a1acbdc9c11b2687b61",
+      measurementId: "G-XVBLXE8Z0N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ── SAVE evaluation to Firestore ──
+    window.saveEvalToFirebase = async function(personId, data) {
+      try {
+        await setDoc(doc(db, "evaluations", String(personId)), data);
+      } catch(e) { console.error("Erro ao salvar:", e); }
+    };
+
+    // ── DELETE evaluation from Firestore ──
+    window.deleteEvalFromFirebase = async function(personId) {
+      try {
+        await deleteDoc(doc(db, "evaluations", String(personId)));
+      } catch(e) { console.error("Erro ao deletar:", e); }
+    };
+
+    // ── LISTEN to all evaluations in real time ──
+    onSnapshot(collection(db, "evaluations"), (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        const data = change.doc.data();
+        const id = parseInt(change.doc.id);
+        if (change.type === "added" || change.type === "modified") {
+          evaluations[id] = {
+            potencial: data.potencial,
+            impacto: data.impacto,
+            quadrantKey: data.quadrantKey
+          };
+          // Update history
+          const ei = history.findIndex(h => h.personId === id);
+          if (ei >= 0) {
+            history[ei].potencial = data.potencial;
+            history[ei].impacto = data.impacto;
+            history[ei].quadrantKey = data.quadrantKey;
+            history[ei].positivos = data.positivos || '';
+            history[ei].atencao = data.atencao || '';
+          } else {
+            const p = people.find(x => x.id === id);
+            if (p) {
+              history.push({
+                personId: id, name: p.name, squad: p.squad, cargo: p.cargo, gestor: p.gestor,
+                potencial: data.potencial, impacto: data.impacto, quadrantKey: data.quadrantKey,
+                time: data.time || '--:--', positivos: data.positivos || '', atencao: data.atencao || ''
+              });
+            }
+          }
+        }
+        if (change.type === "removed") {
+          delete evaluations[id];
+          history = history.filter(h => h.personId !== id);
+        }
+      });
+      renderPersonList(people);
+      renderMatrix();
+      renderHistory();
+      updateStats();
+    });
+
+    // ── SAVE notes to Firestore ──
+    window.saveNoteToFirebase = async function(personId, field, value) {
+      try {
+        const ev = evaluations[personId];
+        if (!ev) return;
+        await setDoc(doc(db, "evaluations", String(personId)), {
+          ...ev, [field]: value
+        }, { merge: true });
+      } catch(e) { console.error("Erro ao salvar nota:", e); }
+    };
+
+    window._firebaseReady = true;
+  </script>
 </head>
 <body>
 
@@ -516,9 +603,11 @@ function confirmEval(){
   const ei=history.findIndex(h=>h.personId===currentPersonId);
   const notes=ei>=0?{positivos:history[ei].positivos,atencao:history[ei].atencao}:{positivos:'',atencao:''};
   if(ei>=0)history.splice(ei,1);
-  history.unshift({personId:currentPersonId,name:p.name,squad:p.squad,cargo:p.cargo,gestor:p.gestor,
+  const entry = {personId:currentPersonId,name:p.name,squad:p.squad,cargo:p.cargo,gestor:p.gestor,
     potencial:currentPotencial,impacto:currentImpacto,quadrantKey:key,
-    time:new Date().toLocaleTimeString('pt-BR'),positivos:notes.positivos,atencao:notes.atencao});
+    time:new Date().toLocaleTimeString('pt-BR'),positivos:notes.positivos,atencao:notes.atencao};
+  history.unshift(entry);
+  if(window.saveEvalToFirebase) saveEvalToFirebase(currentPersonId, entry);
   renderPersonList(people);renderMatrix();renderHistory();updateStats();
   setTimeout(()=>{const c=document.querySelector(`[data-key="${key}"]`);if(c){c.style.transform='scale(1.03)';setTimeout(()=>c.style.transform='',300);}},50);
 }
@@ -563,7 +652,7 @@ function renderHistory(){
   }).join('');
 }
 
-function saveNote(idx,field,value){if(history[idx])history[idx][field]=value;}
+function saveNote(idx,field,value){if(history[idx]){history[idx][field]=value; if(window.saveNoteToFirebase) saveNoteToFirebase(history[idx].personId, field, value);}}
 
 function renderMatrix(){
   const grid=document.getElementById('matrixGrid');grid.innerHTML='';
@@ -594,12 +683,14 @@ function updateStats(){
 
 function removeEval(id){
   delete evaluations[id];history=history.filter(h=>h.personId!==id);
+  if(window.deleteEvalFromFirebase) deleteEvalFromFirebase(id);
   renderPersonList(people);renderMatrix();renderHistory();updateStats();
   if(currentPersonId===id){clearCurrentEval();document.getElementById('resultBadge').classList.remove('visible');}
 }
 
 function clearAll(){
   if(!confirm('Limpar todas as avaliações desta sessão?'))return;
+  Object.keys(evaluations).forEach(id=>{ if(window.deleteEvalFromFirebase) deleteEvalFromFirebase(parseInt(id)); });
   evaluations={};history=[];currentPersonId=null;currentPotencial=null;currentImpacto=null;
   document.getElementById('emptyState').style.display='flex';
   document.getElementById('evalForm').style.display='none';
@@ -692,7 +783,94 @@ function exportPDF(){
     td{padding:5px 8px;border-bottom:1px solid #edf0fb;vertical-align:top}
     .pill{display:inline-block;padding:2px 7px;border-radius:5px;font-size:7.5px;font-weight:600}
     .np{color:#0d5c50;font-size:8px} .na{color:#7a5a06;font-size:8px}
-  </style></head><body>
+  </style>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot, deleteDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBagy-p3jY3m56ykaFWH6tWpFkYKn2jTXY",
+      authDomain: "inspira-9box.firebaseapp.com",
+      projectId: "inspira-9box",
+      storageBucket: "inspira-9box.firebasestorage.app",
+      messagingSenderId: "1022033896244",
+      appId: "1:1022033896244:web:486a1acbdc9c11b2687b61",
+      measurementId: "G-XVBLXE8Z0N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ── SAVE evaluation to Firestore ──
+    window.saveEvalToFirebase = async function(personId, data) {
+      try {
+        await setDoc(doc(db, "evaluations", String(personId)), data);
+      } catch(e) { console.error("Erro ao salvar:", e); }
+    };
+
+    // ── DELETE evaluation from Firestore ──
+    window.deleteEvalFromFirebase = async function(personId) {
+      try {
+        await deleteDoc(doc(db, "evaluations", String(personId)));
+      } catch(e) { console.error("Erro ao deletar:", e); }
+    };
+
+    // ── LISTEN to all evaluations in real time ──
+    onSnapshot(collection(db, "evaluations"), (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        const data = change.doc.data();
+        const id = parseInt(change.doc.id);
+        if (change.type === "added" || change.type === "modified") {
+          evaluations[id] = {
+            potencial: data.potencial,
+            impacto: data.impacto,
+            quadrantKey: data.quadrantKey
+          };
+          // Update history
+          const ei = history.findIndex(h => h.personId === id);
+          if (ei >= 0) {
+            history[ei].potencial = data.potencial;
+            history[ei].impacto = data.impacto;
+            history[ei].quadrantKey = data.quadrantKey;
+            history[ei].positivos = data.positivos || '';
+            history[ei].atencao = data.atencao || '';
+          } else {
+            const p = people.find(x => x.id === id);
+            if (p) {
+              history.push({
+                personId: id, name: p.name, squad: p.squad, cargo: p.cargo, gestor: p.gestor,
+                potencial: data.potencial, impacto: data.impacto, quadrantKey: data.quadrantKey,
+                time: data.time || '--:--', positivos: data.positivos || '', atencao: data.atencao || ''
+              });
+            }
+          }
+        }
+        if (change.type === "removed") {
+          delete evaluations[id];
+          history = history.filter(h => h.personId !== id);
+        }
+      });
+      renderPersonList(people);
+      renderMatrix();
+      renderHistory();
+      updateStats();
+    });
+
+    // ── SAVE notes to Firestore ──
+    window.saveNoteToFirebase = async function(personId, field, value) {
+      try {
+        const ev = evaluations[personId];
+        if (!ev) return;
+        await setDoc(doc(db, "evaluations", String(personId)), {
+          ...ev, [field]: value
+        }, { merge: true });
+      } catch(e) { console.error("Erro ao salvar nota:", e); }
+    };
+
+    window._firebaseReady = true;
+  </script>
+</head><body>
   <div class="hdr">
     <div class="logo-box"><svg width="14" height="10" viewBox="0 0 20 14" fill="none"><path d="M1 7 C3 2,5 2,7 7 C9 12,11 12,13 7 C15 2,17 2,19 7" stroke="#070C21" stroke-width="2.5" stroke-linecap="round" fill="none"/><circle cx="1" cy="7" r="1.5" fill="#070C21"/></svg></div>
     <h1>inspira · Mesa de Calibragem 9Box</h1>
