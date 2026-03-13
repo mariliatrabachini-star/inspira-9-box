@@ -78,7 +78,7 @@
   .person-name { font-size: 0.8rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .person-squad { font-size: 0.67rem; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 300; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: all 0.3s; }
-  .status-dot.evaluated { background: #90EE90; box-shadow: 0 0 5px #90EE9088; }
+  .status-dot.evaluated { background: #cff6c8; box-shadow: 0 0 5px #cff6c888; }
 
   .main { display: flex; flex-direction: column; overflow-y: auto; }
 
@@ -126,28 +126,31 @@
   .sec-heading { font-size: 1rem; font-weight: 700; margin-bottom: 20px; color: var(--text); }
   .sec-heading span { color: var(--muted); font-weight: 300; font-size: 0.82rem; margin-left: 6px; }
 
-  .matrix-wrap { display: grid; grid-template-columns: 28px 1fr; grid-template-rows: 1fr 26px; gap: 4px; max-width: 820px; }
+  .matrix-wrap { display: grid; grid-template-columns: 28px 52px 1fr; grid-template-rows: 1fr 26px 22px; gap: 4px; max-width: 860px; }
   .y-axis-label { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); grid-row: 1; grid-column: 1; }
-  .matrix-grid { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; gap: 3px; }
+  .y-row-labels { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; }
+  .y-row-label { flex: 1; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 0.6rem; color: var(--muted); font-weight: 300; text-align: right; line-height: 1.3; }
+  .matrix-grid { grid-row: 1; grid-column: 3; display: flex; flex-direction: column; gap: 3px; }
   .matrix-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; }
   .matrix-cell { border-radius: 9px; padding: 11px 12px; min-height: 100px; display: flex; flex-direction: column; transition: transform 0.2s; position: relative; overflow: hidden; }
   .cell-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 7px; }
   .cell-title { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.2px; line-height: 1.35; text-transform: uppercase; }
   .cell-count { font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.18); flex-shrink: 0; }
   .cell-people { display: flex; flex-wrap: wrap; gap: 3px; margin-top: auto; }
-  .person-chip { display: flex; align-items: center; gap: 4px; padding: 2px 7px 2px 3px; border-radius: 20px; background: rgba(0,0,0,0.2); font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.9); cursor: pointer; transition: background 0.15s; }
-  .person-chip:hover { background: rgba(0,0,0,0.38); }
+  .person-chip { display: flex; align-items: center; gap: 4px; padding: 2px 7px 2px 3px; border-radius: 20px; background: rgba(0,0,0,0.12); font-size: 0.65rem; font-weight: 500; color: #1a1a2e; cursor: pointer; transition: background 0.15s; }
+  .person-chip:hover { background: rgba(0,0,0,0.22); }
   .chip-avatar { width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 700; flex-shrink: 0; color: var(--rich-black); }
   .chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 76px; }
 
-  .cell-red    { background: #DC143C; border: 1px solid #ff4d6d55; }
-  .cell-yellow { background: #8B8000; border: 1px solid #F0E68C44; }
-  .cell-green  { background: #2d7a2d; border: 1px solid #90EE9044; }
-  .cell-red   .cell-title { color: #ffe0e6; }
-  .cell-yellow .cell-title { color: #F0E68C; }
-  .cell-green  .cell-title { color: #90EE90; }
+  .cell-red    { background: #ff9e8e; border: 1px solid #ff7a6688; }
+  .cell-yellow { background: #fffec4; border: 1px solid #e8e08888; }
+  .cell-green  { background: #cff6c8; border: 1px solid #8ed98888; }
+  .cell-red   .cell-title { color: #7a1a0a; }
+  .cell-yellow .cell-title { color: #6b6200; }
+  .cell-green  .cell-title { color: #1a5c14; }
 
-  .x-axis-labels { grid-row: 2; grid-column: 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; }
+  .x-axis-labels { grid-row: 2; grid-column: 3; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; }
+  .x-axis-title { grid-row: 3; grid-column: 3; text-align: center; font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
   .x-axis-label { text-align: center; font-size: 0.6rem; color: var(--muted); font-weight: 300; padding-top: 4px; }
 
   .matrix-legend { display: flex; gap: 18px; margin-top: 13px; flex-wrap: wrap; }
@@ -254,7 +257,7 @@
         </div>
         <div class="axes-grid">
           <div class="axis-card" id="cardPotencial">
-            <div class="axis-badge"><div class="axis-badge-dot"></div> Eixo Vertical · Potencial</div>
+            <div class="axis-badge"><div class="axis-badge-dot"></div> Eixo Vertical · Como eu trabalho</div>
             <div class="axis-desc">Como eu trabalho: comportamentos que geram velocidade e qualidade — autonomia, uso de IA, comunicação.</div>
             <div class="scale-btns">
               <button class="scale-btn abaixo" onclick="selectAxis('potencial','abaixo',this)">↓ Abaixo<br>do esperado</button>
@@ -263,7 +266,7 @@
             </div>
           </div>
           <div class="axis-card" id="cardImpacto">
-            <div class="axis-badge"><div class="axis-badge-dot"></div> Eixo Horizontal · Performance</div>
+            <div class="axis-badge"><div class="axis-badge-dot"></div> Eixo Horizontal · Impacto do meu trabalho</div>
             <div class="axis-desc">Impacto do meu trabalho: resultados que geram valor real para o cliente e/ou negócio da Inspira.</div>
             <div class="scale-btns">
               <button class="scale-btn abaixo" onclick="selectAxis('impacto','abaixo',this)">↓ Abaixo<br>do esperado</button>
@@ -283,19 +286,24 @@
       <div class="sec-eyebrow">Mapeamento</div>
       <div class="sec-heading">9Box Inspira <span id="matrixSubtitle">— nenhuma avaliação ainda</span></div>
       <div class="matrix-wrap">
-        <div class="y-axis-label">↑ Potencial (Como eu trabalho)</div>
+        <div class="y-axis-label">Como eu trabalho</div>
+        <div class="y-row-labels"><div class="y-row-label">Acima do esperado</div><div class="y-row-label">Dentro do esperado</div><div class="y-row-label">Abaixo do esperado</div></div>
         <div class="matrix-grid" id="matrixGrid"></div>
         <div style="grid-row:2;grid-column:1"></div>
-        <div class="x-axis-labels">
+        <div style="grid-row:2;grid-column:2"></div>
+        <div style="grid-row:3;grid-column:1"></div>
+        <div style="grid-row:3;grid-column:2"></div>
+        <div class="x-axis-labels" style="grid-row:2;grid-column:3">
           <div class="x-axis-label">Abaixo do esperado</div>
-          <div class="x-axis-label" style="font-weight:600;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted)">→ Performance</div>
+          <div class="x-axis-label">Dentro do esperado</div>
           <div class="x-axis-label">Acima do esperado</div>
         </div>
+        <div class="x-axis-title">Impacto do meu trabalho</div>
       </div>
       <div class="matrix-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#90EE90"></div>Alto potencial / desempenho</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#F0E68C"></div>Em desenvolvimento</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#DC143C"></div>Zona de atenção</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#cff6c8;border:1px solid #8ed988"></div>Alto potencial / desempenho</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fffec4;border:1px solid #e8e088"></div>Em desenvolvimento</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff9e8e;border:1px solid #ff7a66"></div>Zona de atenção</div>
       </div>
     </div>
 
@@ -340,15 +348,15 @@
 
 <script>
 const QUADRANT_MAP={
-  acima_acima:   {name:"Talento",                              color:"cell-green",  hex:"#90EE90"},
-  acima_dentro:  {name:"Forte Desempenho / Em Crescimento",    color:"cell-green",  hex:"#90EE90"},
-  acima_abaixo:  {name:"Enigma / Diamante Bruto",              color:"cell-yellow", hex:"#F0E68C"},
-  dentro_acima:  {name:"Forte Desempenho",                     color:"cell-green",  hex:"#90EE90"},
-  dentro_dentro: {name:"Mantenedor / Diversificação Limitada", color:"cell-yellow", hex:"#F0E68C"},
-  dentro_abaixo: {name:"Questionável",                         color:"cell-red",    hex:"#DC143C"},
-  abaixo_acima:  {name:"Comprometido",                         color:"cell-yellow", hex:"#F0E68C"},
-  abaixo_dentro: {name:"Eficaz",                               color:"cell-red",    hex:"#DC143C"},
-  abaixo_abaixo: {name:"Potencial p/ Realocação / Demissão",   color:"cell-red",    hex:"#DC143C"},
+  acima_acima:   {name:"Talento",                              num:"#7", color:"cell-green",  hex:"#cff6c8"},
+  acima_dentro:  {name:"Forte Desempenho / Em Crescimento",    num:"#8", color:"cell-green",  hex:"#cff6c8"},
+  acima_abaixo:  {name:"Enigma / Diamante Bruto",              num:"#9", color:"cell-yellow", hex:"#fffec4"},
+  dentro_acima:  {name:"Forte Desempenho",                     num:"#4", color:"cell-green",  hex:"#cff6c8"},
+  dentro_dentro: {name:"Mantenedor / Diversificação Limitada", num:"#5", color:"cell-yellow", hex:"#fffec4"},
+  dentro_abaixo: {name:"Questionável",                         num:"#6", color:"cell-red",    hex:"#ff9e8e"},
+  abaixo_acima:  {name:"Comprometido",                         num:"#1", color:"cell-yellow", hex:"#fffec4"},
+  abaixo_dentro: {name:"Eficaz",                               num:"#2", color:"cell-red",    hex:"#ff9e8e"},
+  abaixo_abaixo: {name:"Potencial p/ Realocação / Demissão",   num:"#3", color:"cell-red",    hex:"#ff9e8e"},
 };
 const MATRIX_LAYOUT=[
   {cells:["acima_abaixo","acima_dentro","acima_acima"]},
@@ -565,7 +573,7 @@ function renderMatrix(){
       const q=QUADRANT_MAP[key];
       const ppl=Object.entries(evaluations).filter(([,ev])=>ev.quadrantKey===key).map(([id])=>people.find(p=>p.id==id)).filter(Boolean);
       const cell=document.createElement('div');cell.className='matrix-cell '+q.color;cell.dataset.key=key;
-      cell.innerHTML=`<div class="cell-header"><div class="cell-title">${q.name}</div>${ppl.length?`<div class="cell-count">${ppl.length}</div>`:''}</div>
+      cell.innerHTML=`<div class="cell-header"><div class="cell-title">${q.num}</div>${ppl.length?`<div class="cell-count">${ppl.length}</div>`:''}</div>
         <div class="cell-people">${ppl.map(p=>`<div class="person-chip" onclick="selectPerson(${p.id})" onmouseenter="showTooltip(event,${p.id})" onmouseleave="hideTooltip()">
           <div class="chip-avatar" style="background:${avatarColor(p.name)}">${initials(p.name)}</div>
           <span class="chip-name">${p.name.split(' ')[0]}</span></div>`).join('')}</div>`;
@@ -691,8 +699,8 @@ function exportPDF(){
   </div>
   <div class="sub">Gerado em ${new Date().toLocaleString('pt-BR')} · ${Object.keys(evaluations).length} colaboradores avaliados</div>
   <div class="wrap"><div class="ay">↑ Potencial</div><div><div class="grid">`;
-  const cellBg={'cell-green':'#2d7a2d','cell-yellow':'#8B8000','cell-red':'#DC143C'};
-  const cellFg={'cell-green':'#90EE90','cell-yellow':'#F0E68C','cell-red':'#ffe0e6'};
+  const cellBg={'cell-green':'#cff6c8','cell-yellow':'#fffec4','cell-red':'#ff9e8e'};
+  const cellFg={'cell-green':'#1a5c14','cell-yellow':'#6b6200','cell-red':'#7a1a0a'};
   MATRIX_LAYOUT.forEach(row=>row.cells.forEach(key=>{
     const q=QUADRANT_MAP[key];
     const ppl=Object.entries(evaluations).filter(([,ev])=>ev.quadrantKey===key).map(([id])=>people.find(p=>p.id==id)).filter(Boolean);
